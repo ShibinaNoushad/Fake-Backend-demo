@@ -27,3 +27,7 @@ button:active {
   background-color: #460897;
   border-color: #460897;
 }
+.btn{
+  background-color: red;
+  color: white;
+}
