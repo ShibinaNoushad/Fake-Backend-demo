@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 import MoviesList from "./components/MoviesList";
 import { useState } from "react";
@@ -8,17 +8,64 @@ function App() {
   const [movies, setMovies] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [reload, setreload] = useState(true);
+  const [getResponse, setGetresponse] = useState("");
+
+  const stopRetrying = () => {
+    setreload(false);
+  };
+
+  const fetchHandler = () => {
+    return new Promise(async (res, rej) => {
+      try {
+        let response = await fetch("https://swapi.dev/api/film/");
+        setGetresponse(response);
+
+        res(response);
+      } catch (error) {
+        rej(error);
+      }
+    });
+  };
+  useEffect(() => {
+    if (getResponse) {
+      if (!getResponse.ok) {
+        if (reload) {
+          const id = setTimeout(async () => {
+            await fetchHandler();
+          }, 5000);
+        }
+      }
+    }
+  }, [getResponse, reload]);
+
   const movieFetchHandler = async () => {
     setIsLoading(true);
     setError(null);
+    setreload(true);
+
+
     try {
-      const respone = await fetch("https://swapi.dev/api/film/");
-      if (!respone.ok) {
-        setError(true);
+      // let respone = await fetch("https://swapi.dev/api/film/");
+      const response = await fetchHandler();
+      // if (!respone.ok) {
+      //   if (reload) {
+      //     const id = setTimeout(() => {
+      //       respone = fetch("https://swapi.dev/api/film/");
+      //     }, 5000);
+      //   }
+
+      //   throw new Error("Something went wrong");
+      // }
+
+      if (!response.ok) {
         throw new Error("Something went wrong");
       }
 
-      const data = await respone.json();
+      // }
+      //}
+
+      const data = await response.json();
       const transFormedMovies = data.results.map((movieData) => {
         return {
           id: movieData.episode_id,
@@ -34,6 +81,7 @@ function App() {
     setIsLoading(false);
   };
   let content = <p>Found No Movies</p>;
+
   if (movies.length > 0) {
     content = <MoviesList movies={movies} />;
   }
@@ -43,6 +91,7 @@ function App() {
   if (isLoading) {
     content = <p>Loading</p>;
   }
+
   return (
     <React.Fragment>
       <section>
@@ -54,6 +103,7 @@ function App() {
         {isLoading && <p>Loading...</p>}
         {!isLoading && error && <p>{error}</p>} */}
         {content}
+        {reload && error && <button onClick={stopRetrying}>Cancel</button>}
       </section>
     </React.Fragment>
   );
