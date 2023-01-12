@@ -2,12 +2,17 @@ import React, { useCallback, useEffect } from "react";
 
 import MoviesList from "./components/MoviesList";
 import { useState } from "react";
+import Form from "./components/Form";
 import "./App.css";
 
 function App() {
+  console.log("App");
   const [movies, setMovies] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const submitHandler = useCallback((obj) => {
+    console.log(obj);
+  }, []);
 
   const movieFetchHandler = useCallback(async () => {
     setIsLoading(true);
@@ -33,11 +38,11 @@ function App() {
       setError(error.message);
     }
     setIsLoading(false);
-  },[]);
+  }, []);
 
-  useEffect(() => {
-    movieFetchHandler();
-  }, [movieFetchHandler]);
+  // useEffect(() => {
+  //   movieFetchHandler();
+  // }, [movieFetchHandler]);
 
   let content = <p>Found No Movies</p>;
 
@@ -52,6 +57,7 @@ function App() {
   }
   return (
     <React.Fragment>
+      <Form onClick={submitHandler}></Form>
       <section>
         <button onClick={movieFetchHandler}>Fetch Movies</button>
       </section>
