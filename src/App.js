@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 
 import MoviesList from "./components/MoviesList";
 import { useState } from "react";
@@ -8,76 +8,48 @@ function App() {
   const [movies, setMovies] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [reload, setreload] = useState(false);
-  // console.log(reload)
 
-  const stopRetrying = () => {
-    setreload(false);
-  };
-
-  const newFun = () => {
-    // if (reload) {
-    const id = setTimeout(async () => {
-      console.log(reload);
-      let respone = await fetch("https://swapi.dev/api/film/");
-      if (reload) {
-        newFun();
-      }
-    }, 3000);
-    //}
-  };
-
-  // useEffect(() => {
-  //   if (reload) {
-  //     const id = setTimeout(async () => {
-  //       console.log(reload);
-  //       let respone = await fetch("https://swapi.dev/api/film/");
-  //     }, 5000);
-  //   }
-  // });
-
-  const movieFetchHandler = async () => {
+  const movieFetchHandler = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-
     try {
-      let respone = await fetch("https://swapi.dev/api/film/");
-      console.log(respone);
+      const respone = await fetch("https://swapi.dev/api/films/");
       if (!respone.ok) {
-        setreload(true);
-
-        newFun();
-
+        setError(true);
         throw new Error("Something went wrong");
-      } else {
-        const data = await respone.json();
-        const transFormedMovies = data.results.map((movieData) => {
-          return {
-            id: movieData.episode_id,
-            title: movieData.title,
-            openingText: movieData.opening_crawl,
-            releaseDate: movieData.release_date,
-          };
-        });
-        setMovies(transFormedMovies);
-        setIsLoading(false);
       }
+
+      const data = await respone.json();
+      const transFormedMovies = data.results.map((movieData) => {
+        return {
+          id: movieData.episode_id,
+          title: movieData.title,
+          openingText: movieData.opening_crawl,
+          releaseDate: movieData.release_date,
+        };
+      });
+      setMovies(transFormedMovies);
     } catch (error) {
       setError(error.message);
     }
-  };
+    setIsLoading(false);
+  },[]);
+
+  useEffect(() => {
+    movieFetchHandler();
+  }, [movieFetchHandler]);
+
   let content = <p>Found No Movies</p>;
 
   if (movies.length > 0) {
     content = <MoviesList movies={movies} />;
   }
   if (error) {
-    content = error;
+    content = <p>error</p>;
   }
   if (isLoading) {
     content = <p>Loading</p>;
   }
-
   return (
     <React.Fragment>
       <section>
@@ -89,9 +61,9 @@ function App() {
         {isLoading && <p>Loading...</p>}
         {!isLoading && error && <p>{error}</p>} */}
         {content}
-        {reload && error && <button onClick={stopRetrying}>Cancel</button>}
       </section>
     </React.Fragment>
   );
 }
+
 export default App;
